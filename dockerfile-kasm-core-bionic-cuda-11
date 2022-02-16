@@ -1,12 +1,7 @@
-ARG BASE_IMAGE="ubuntu:18.04"
+### Base from cuda 11
+ARG BASE_IMAGE="nvidia/cuda:11.2.1-cudnn8-devel-ubuntu18.04"
 FROM $BASE_IMAGE AS install_tools
 ARG DISTRO=ubuntu
-
-LABEL "com.kasmweb.image"="true"
-
-### Install common tools
-COPY ./src/ubuntu/install/tools $INST_SCRIPTS/tools/
-RUN bash $INST_SCRIPTS/tools/install_tools.sh && rm -rf $INST_SCRIPTS/tools/
 
 ### Environment config
 ARG START_XFCE4=0
@@ -52,6 +47,14 @@ EXPOSE $VNC_PORT \
 WORKDIR $HOME
 RUN mkdir -p $HOME/Desktop
 
+### Install common tools
+RUN apt-get update && apt-get install -y apt-utils && apt-get autoremove -y && apt-get autoclean -y
+RUN apt-get update && apt-get install -y git htop vim wget net-tools locales bzip2 wmctrl software-properties-common mesa-utils && apt-get autoremove -y && apt-get autoclean -y
+RUN locale-gen en_US.UTF-8
+
+### Install nvtop ("htop" for gpu)
+COPY ./src/ubuntu/install/nvtop $INST_SCRIPTS/nvtop/
+RUN bash $INST_SCRIPTS/nvtop/install_nvtop.sh && rm -rf $INST_SCRIPTS/nvtop/
 
 ### Install custom fonts
 COPY ./src/ubuntu/install/fonts $INST_SCRIPTS/fonts/
@@ -78,7 +81,6 @@ RUN bash $INST_SCRIPTS/kasm_vnc/install_kasm_vnc.sh && rm -rf $INST_SCRIPTS/kasm
 ### Install Kasm Upload Server
 COPY ./src/ubuntu/install/kasm_upload_server $INST_SCRIPTS/kasm_upload_server/
 RUN bash $INST_SCRIPTS/kasm_upload_server/install_kasm_upload_server.sh  && rm -rf $INST_SCRIPTS/kasm_upload_server/
-
 
 ### Install Audio
 COPY ./src/ubuntu/install/audio $INST_SCRIPTS/audio/
@@ -114,7 +116,6 @@ RUN bash $INST_SCRIPTS/libnss/libnss_wrapper.sh  && rm -rf $INST_SCRIPTS/libnss/
 COPY ./src/common/scripts/kasm_hook_scripts $STARTUPDIR
 ADD ./src/common/startup_scripts $STARTUPDIR
 RUN bash $STARTUPDIR/set_user_permission.sh $STARTUPDIR $HOME
-
 
 ### extra configurations needed per distro variant
 COPY ./src/ubuntu/install/extra $INST_SCRIPTS/extra/

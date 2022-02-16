@@ -16,7 +16,6 @@ RUN tar -xzf kasm-squid-builder_centos.tar.gz -C /
 
 FROM install_tools
 
-MAINTAINER Kasm Tech "info@kasmweb.com"
 LABEL "com.kasmweb.image"="true"
 
 ### Environment config
